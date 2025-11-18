@@ -45,7 +45,11 @@ app.use('/api/', limiter);
 
 // CORS configuration
 const corsOptions = {
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173',
+  origin: [
+    process.env.FRONTEND_URL,
+    'https://www.mon-portfolio-fullstack-anague-yves.vercel.app',
+    'http://localhost:5173'
+  ],
   credentials: true,
   optionsSuccessStatus: 200
 };
