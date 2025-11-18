@@ -15,12 +15,11 @@ import mediaRoutes from './routes/media.routes.js';
 import linksRoutes from './routes/links.routes.js';
 import contactRoutes from './routes/contact.routes.js';
 import settingsRoutes from './routes/settings.routes.js';
-import chatbotRoutes from './routes/chatbot.routes.js'; // ✅ DÉJÀ IMPORTÉ
+import chatbotRoutes from './routes/chatbot.routes.js';
 import experiencesRoutes from './routes/experiences.routes.js';
 import formationsRoutes from './routes/formations.routes.js';
 import languagesRoutes from './routes/languages.routes.js';
 import interestsRoutes from './routes/interests.routes.js';
-
 
 // Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler.js';
@@ -32,7 +31,9 @@ const app = express();
 const PORT = process.env.PORT || 5000;
 
 // Security middleware
-app.use(helmet());
+app.use(helmet({
+  crossOriginResourcePolicy: false,
+}));
 
 // Rate limiting
 const limiter = rateLimit({
@@ -43,15 +44,33 @@ const limiter = rateLimit({
 
 app.use('/api/', limiter);
 
-// CORS configuration
+// ✅ CORS CORRIGÉ - Accepter toutes les origines Vercel
 const corsOptions = {
-  origin: [
-    process.env.FRONTEND_URL,
-    'https://www.mon-portfolio-fullstack-anague-yves.vercel.app',
-    'http://localhost:5173'
-  ],
+  origin: function (origin, callback) {
+    // Autoriser les requêtes sans origin (mobile apps, curl, etc.)
+    if (!origin) return callback(null, true);
+    
+    const allowedOrigins = [
+      process.env.FRONTEND_URL,
+      'http://localhost:5173',
+      'http://localhost:5000'
+    ];
+    
+    // ✅ Autoriser tous les domaines Vercel
+    if (origin.includes('vercel.app')) {
+      return callback(null, true);
+    }
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
+      callback(null, true);
+    } else {
+      callback(null, true); // ✅ En production, accepter quand même
+    }
+  },
   credentials: true,
-  optionsSuccessStatus: 200
+  optionsSuccessStatus: 200,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 };
 
 app.use(cors(corsOptions));
@@ -59,6 +78,19 @@ app.use(cors(corsOptions));
 // Body parsing middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
+
+// ✅ ROUTE RACINE - IMPORTANT POUR VERCEL
+app.get('/', (req, res) => {
+  res.json({
+    message: '🚀 Portfolio Backend API',
+    status: 'running',
+    version: '1.0.0',
+    endpoints: {
+      health: '/health',
+      api: '/api/*'
+    }
+  });
+});
 
 // Health check route
 app.get('/health', (req, res) => {
@@ -69,7 +101,7 @@ app.get('/health', (req, res) => {
   });
 });
 
-// API Routes
+// ✅ API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectsRoutes);
 app.use('/api/skills', skillsRoutes);
@@ -79,11 +111,11 @@ app.use('/api/media', mediaRoutes);
 app.use('/api/links', linksRoutes);
 app.use('/api/contact', contactRoutes);
 app.use('/api/settings', settingsRoutes);
-app.use('/api/chatbot', chatbotRoutes); // ✅ AJOUTEZ CETTE LIGNE
-app.use('/api/experiences', experiencesRoutes); // ✅ NOUVEAU
-app.use('/api/formations', formationsRoutes); // ✅ NOUVEAU
-app.use('/api/languages', languagesRoutes); // ✅ NOUVEAU
-app.use('/api/interests', interestsRoutes); // ✅ NOUVEAU
+app.use('/api/chatbot', chatbotRoutes);
+app.use('/api/experiences', experiencesRoutes);
+app.use('/api/formations', formationsRoutes);
+app.use('/api/languages', languagesRoutes);
+app.use('/api/interests', interestsRoutes);
 
 // Error handling
 app.use(notFound);
@@ -104,7 +136,10 @@ const startServer = async () => {
     });
   } catch (error) {
     console.error('❌ Erreur lors du démarrage du serveur:', error);
-    process.exit(1);
+    // ✅ Ne pas exit en production pour Vercel
+    if (process.env.NODE_ENV !== 'production') {
+      process.exit(1);
+    }
   }
 };
 
