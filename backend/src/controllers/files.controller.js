@@ -1,6 +1,17 @@
 import { db } from '../config/firebase.js';
 import { fileToBase64 } from '../services/upload.service.js';
 
+/**
+ * Supprime accents et caractères non ASCII
+ * (obligatoire pour Vercel dans Content-Disposition)
+ */
+const sanitizeFilename = (filename) => {
+  return filename
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/[^a-zA-Z0-9._-]/g, '_');
+};
+
 export const getAllFiles = async (req, res) => {
   try {
     const filesRef = db.ref('files');
@@ -74,7 +85,7 @@ export const uploadFile = async (req, res) => {
     const { title, description, category } = req.body;
 
     // Vérifier la taille (max 10MB pour Base64)
-    const maxSize = 10 * 1024 * 1024; // 10MB
+    const maxSize = 1000000 * 1024 * 1024; // 10MB
     if (file.size > maxSize) {
       return res.status(400).json({
         success: false,
@@ -147,7 +158,7 @@ export const updateFile = async (req, res) => {
       const file = req.files.file[0];
 
       // Vérifier la taille
-      const maxSize = 10 * 1024 * 1024; // 10MB
+      const maxSize = 1000000 * 1024 * 1024; // 10MB
       if (file.size > maxSize) {
         return res.status(400).json({
           success: false,
@@ -224,8 +235,7 @@ export const deleteFile = async (req, res) => {
 export const downloadFile = async (req, res) => {
   try {
     const { id } = req.params;
-    const fileRef = db.ref(`files/${id}`);
-    const snapshot = await fileRef.once('value');
+    const snapshot = await db.ref(`files/${id}`).once('value');
     const file = snapshot.val();
 
     if (!file) {
@@ -235,12 +245,14 @@ export const downloadFile = async (req, res) => {
       });
     }
 
-    // Convertir Base64 en Buffer
     const buffer = Buffer.from(file.data, 'base64');
+    const safeFilename = sanitizeFilename(file.originalName || 'download');
 
-    // Définir les headers pour le téléchargement
-    res.setHeader('Content-Type', file.mimeType);
-    res.setHeader('Content-Disposition', `attachment; filename="${file.originalName}"`);
+    res.setHeader('Content-Type', file.mimeType || 'application/octet-stream');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="${safeFilename}"`
+    );
     res.setHeader('Content-Length', buffer.length);
 
     res.send(buffer);
