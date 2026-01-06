@@ -1,13 +1,18 @@
+// frontend/src/components/projects/ProjectFilters.jsx
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../hooks/useLanguage';
-import { CATEGORIES } from '../../utils/constants';
 
 const ProjectFilters = ({ selectedCategory, onCategoryChange }) => {
   const { t } = useLanguage();
 
+  // ✅ Ajout du type "Autre"
   const categories = [
     { value: 'all', label: t('projects.all') },
-    ...CATEGORIES.PROJECTS.map(cat => ({ value: cat, label: t(`projects.${cat}`) }))
+    { value: 'web', label: t('projects.web') },
+    { value: 'mobile', label: t('projects.mobile') },
+    { value: 'desktop', label: t('projects.desktop') },
+    { value: 'api', label: t('projects.api') },
+    { value: 'other', label: t('projects.other') } // ✅ AJOUT
   ];
 
   return (

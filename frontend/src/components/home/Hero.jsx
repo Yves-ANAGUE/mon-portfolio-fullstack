@@ -13,6 +13,14 @@ const Hero = () => {
   const navigate = useNavigate();
   const [settings, setSettings] = useState(null);
   const [cvFile, setCvFile] = useState(null);
+  
+  // États pour l'effet typewriter
+  const [currentTitleIndex, setCurrentTitleIndex] = useState(0);
+  const [currentDescIndex, setCurrentDescIndex] = useState(0);
+  const [displayedTitle, setDisplayedTitle] = useState('');
+  const [displayedDesc, setDisplayedDesc] = useState('');
+  const [isTypingTitle, setIsTypingTitle] = useState(true);
+  const [isTypingDesc, setIsTypingDesc] = useState(false);
 
   useEffect(() => {
     fetchSettings();
@@ -52,8 +60,82 @@ const Hero = () => {
   };
 
   const isFrench = language === 'fr';
-  const title = isFrench ? settings?.profile?.title : settings?.profile?.titleEn;
-  const description = isFrench ? settings?.profile?.description : settings?.profile?.descriptionEn;
+  
+  // Récupérer les tableaux de titres et descriptions
+  const titles = isFrench 
+    ? (settings?.profile?.titles || ['Développeur Full Stack']) 
+    : (settings?.profile?.titlesEn || ['Full Stack Developer']);
+  
+  const descriptions = isFrench
+    ? (settings?.profile?.descriptions || ['Passionné par la création d\'expériences web innovantes'])
+    : (settings?.profile?.descriptionsEn || ['Passionate about creating innovative web experiences']);
+
+  // ✅ Effet Typewriter pour les titres
+  useEffect(() => {
+    if (!settings || titles.length === 0) return;
+
+    const currentTitle = titles[currentTitleIndex];
+    
+    if (isTypingTitle) {
+      if (displayedTitle.length < currentTitle.length) {
+        const timeout = setTimeout(() => {
+          setDisplayedTitle(currentTitle.slice(0, displayedTitle.length + 1));
+        }, 100); // Vitesse de frappe
+        return () => clearTimeout(timeout);
+      } else {
+        // Titre complètement tapé, attendre avant d'effacer
+        const timeout = setTimeout(() => {
+          setIsTypingTitle(false);
+          setIsTypingDesc(true);
+        }, 1500);
+        return () => clearTimeout(timeout);
+      }
+    } else {
+      // Effacer le titre
+      if (displayedTitle.length > 0) {
+        const timeout = setTimeout(() => {
+          setDisplayedTitle(displayedTitle.slice(0, -1));
+        }, 50);
+        return () => clearTimeout(timeout);
+      } else {
+        // Passer au titre suivant
+        setCurrentTitleIndex((prev) => (prev + 1) % titles.length);
+        setIsTypingTitle(true);
+      }
+    }
+  }, [displayedTitle, isTypingTitle, currentTitleIndex, titles, settings]);
+
+  // ✅ Effet Typewriter pour les descriptions
+  useEffect(() => {
+    if (!settings || descriptions.length === 0 || !isTypingDesc) return;
+
+    const currentDesc = descriptions[currentDescIndex];
+    
+    if (displayedDesc.length < currentDesc.length) {
+      const timeout = setTimeout(() => {
+        setDisplayedDesc(currentDesc.slice(0, displayedDesc.length + 1));
+      }, 80);
+      return () => clearTimeout(timeout);
+    } else {
+      // Description complète, attendre avant d'effacer
+      const timeout = setTimeout(() => {
+        setIsTypingDesc(false);
+      }, 2000);
+      return () => clearTimeout(timeout);
+    }
+  }, [displayedDesc, isTypingDesc, currentDescIndex, descriptions, settings]);
+
+  // Effacer la description quand le titre change
+  useEffect(() => {
+    if (!isTypingTitle && displayedDesc.length > 0) {
+      const timeout = setTimeout(() => {
+        setDisplayedDesc(displayedDesc.slice(0, -1));
+      }, 50);
+      return () => clearTimeout(timeout);
+    } else if (displayedDesc.length === 0 && !isTypingTitle) {
+      setCurrentDescIndex((prev) => (prev + 1) % descriptions.length);
+    }
+  }, [isTypingTitle, displayedDesc, descriptions.length]);
 
   return (
     <section className="min-h-screen flex items-center justify-center pt-16 bg-gradient-to-br from-white via-primary-50 to-purple-50 dark:from-gray-900 dark:via-gray-900 dark:to-gray-800">
@@ -86,20 +168,26 @@ const Hero = () => {
               </div>
             </motion.div>
 
+            {/* ✅ Titre avec effet Typewriter */}
             <motion.h1
               variants={ANIMATION_VARIANTS.slideUp}
               transition={{ delay: 0.3 }}
-              className="text-5xl md:text-7xl font-bold mb-6"
+              className="text-5xl md:text-7xl font-bold mb-6 min-h-[80px] md:min-h-[100px]"
             >
-              <span className="gradient-text">{title || t('home.title')}</span>
+              <span className="gradient-text">
+                {displayedTitle}
+                <span className="animate-pulse">|</span>
+              </span>
             </motion.h1>
 
+            {/* ✅ Description avec effet Typewriter */}
             <motion.p
               variants={ANIMATION_VARIANTS.slideUp}
               transition={{ delay: 0.4 }}
-              className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-8"
+              className="text-xl md:text-2xl text-gray-600 dark:text-gray-400 mb-8 min-h-[60px]"
             >
-              {description || t('home.subtitle')}
+              {displayedDesc}
+              {isTypingDesc && <span className="animate-pulse">|</span>}
             </motion.p>
 
             <motion.div
@@ -111,10 +199,10 @@ const Hero = () => {
                 {t('home.cta')}
                 <ArrowRight className="inline-block ml-2 w-5 h-5 group-hover:translate-x-1 transition-transform" />
               </Link>
-              <Link to={ROUTES.DOWNLOADS} className="btn btn-outline group">
+              <button onClick={handleDownloadCV} className="btn btn-outline group">
                 <Download className="inline-block mr-2 w-5 h-5 group-hover:translate-y-1 transition-transform" />
                 {t('downloads.cv')}
-              </Link>
+              </button>
             </motion.div>
           </motion.div>
 

@@ -1,5 +1,7 @@
+// frontend/src/pages/Projects.jsx
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
+import { ArrowUpDown } from 'lucide-react';
 import SearchBar from '../components/common/SearchBar';
 import ProjectFilters from '../components/projects/ProjectFilters';
 import ProjectsList from '../components/projects/ProjectsList';
@@ -19,6 +21,8 @@ const Projects = () => {
   const [selectedCategory, setSelectedCategory] = useState('all');
   const [selectedProject, setSelectedProject] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  // ✅ État pour le tri
+  const [sortOrder, setSortOrder] = useState('recent'); // 'recent', 'oldest', 'alpha'
 
   useEffect(() => {
     fetchProjects();
@@ -26,7 +30,7 @@ const Projects = () => {
 
   useEffect(() => {
     filterProjects();
-  }, [searchTerm, selectedCategory, projects]);
+  }, [searchTerm, selectedCategory, sortOrder, projects]);
 
   const fetchProjects = async () => {
     try {
@@ -49,6 +53,18 @@ const Projects = () => {
     // Search
     if (searchTerm) {
       filtered = searchInArray(filtered, searchTerm, ['title', 'description', 'technologies']);
+    }
+
+    // ✅ Tri
+    if (sortOrder === 'recent') {
+      // Plus récents d'abord
+      filtered.sort((a, b) => new Date(b.date || b.createdAt || 0) - new Date(a.date || a.createdAt || 0));
+    } else if (sortOrder === 'oldest') {
+      // Plus anciens d'abord
+      filtered.sort((a, b) => new Date(a.date || a.createdAt || 0) - new Date(b.date || b.createdAt || 0));
+    } else if (sortOrder === 'alpha') {
+      // Ordre alphabétique
+      filtered.sort((a, b) => a.title.localeCompare(b.title));
     }
 
     setFilteredProjects(filtered);
@@ -93,6 +109,51 @@ const Projects = () => {
             selectedCategory={selectedCategory}
             onCategoryChange={setSelectedCategory}
           />
+          
+          {/* ✅ Boutons de tri */}
+          <div className="flex flex-wrap gap-3 justify-center mt-6">
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setSortOrder('recent')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                sortOrder === 'recent'
+                  ? 'bg-primary-600 text-white shadow-lg'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <ArrowUpDown className="w-4 h-4" />
+              {t('projects.sortRecent')}
+            </motion.button>
+            
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setSortOrder('oldest')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                sortOrder === 'oldest'
+                  ? 'bg-primary-600 text-white shadow-lg'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <ArrowUpDown className="w-4 h-4" />
+              {t('projects.sortOldest')}
+            </motion.button>
+            
+            <motion.button
+              whileHover={{ scale: 1.05 }}
+              whileTap={{ scale: 0.95 }}
+              onClick={() => setSortOrder('alpha')}
+              className={`px-4 py-2 rounded-lg font-medium transition-all flex items-center gap-2 ${
+                sortOrder === 'alpha'
+                  ? 'bg-primary-600 text-white shadow-lg'
+                  : 'bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              }`}
+            >
+              <ArrowUpDown className="w-4 h-4" />
+              {t('projects.sortAlpha')}
+            </motion.button>
+          </div>
         </div>
 
         <ProjectsList

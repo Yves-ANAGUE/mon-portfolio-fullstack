@@ -361,7 +361,7 @@ const PortfolioGenerator = () => {
         
         const interestsText = interests.map(i => 
           `${i.icon} ${isFrench ? i.name : i.nameEn || i.name}`
-        ).join('  •  ');
+        ).join('  🎉  ');
         
         const interestsLines = doc.splitTextToSize(interestsText, 180);
         doc.text(interestsLines, 15, yPos);
@@ -378,7 +378,7 @@ const PortfolioGenerator = () => {
         addSection(doc, isFrench ? 'PROJETS' : 'PROJECTS', yPos);
         yPos += 8;
 
-        projects.slice(0, 5).forEach((project) => {
+        projects.forEach((project) => {
           if (yPos > 240) {
             doc.addPage();
             yPos = 20;
@@ -444,7 +444,7 @@ const PortfolioGenerator = () => {
         addSection(doc, isFrench ? 'TÉMOIGNAGES' : 'TESTIMONIALS', yPos);
         yPos += 8;
 
-        testimonials.slice(0, 3).forEach((testimonial) => {
+        testimonials.forEach((testimonial) => {
           if (yPos > 250) {
             doc.addPage();
             yPos = 20;

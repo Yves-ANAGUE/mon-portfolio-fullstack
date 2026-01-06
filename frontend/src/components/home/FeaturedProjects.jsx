@@ -1,4 +1,4 @@
-// src/components/home/FeaturedProjects.jsx
+// frontend/src/components/home/FeaturedProjects.jsx
 import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
@@ -20,8 +20,14 @@ const FeaturedProjects = () => {
   const fetchProjects = async () => {
     try {
       const response = await projectsService.getAll();
-      // ✅ On prend seulement les 3 premiers projets
-      setProjects(response.data.slice(0, 3));
+      // ✅ Les projets sont déjà triés par date décroissante depuis le backend
+      // On prend seulement les 3 plus récents
+      // ✅ Trier du plus RÉCENT au plus ancien
+      const sorted = response.data.sort((a, b) => 
+        new Date(b.date || b.createdAt) - new Date(a.date || a.createdAt)
+      );
+      // ✅ Prendre les 3 plus récents
+      setProjects(sorted.slice(0, 3));
     } catch (error) {
       console.error('Error fetching projects:', error);
     } finally {
@@ -67,6 +73,8 @@ const FeaturedProjects = () => {
               // ✅ Sécurisation du champ technologies
               const technologies = Array.isArray(project.technologies)
                 ? project.technologies
+                : typeof project.technologies === 'object'
+                ? Object.values(project.technologies)
                 : typeof project.technologies === 'string'
                 ? project.technologies.split(',').map((t) => t.trim())
                 : [];
@@ -78,13 +86,23 @@ const FeaturedProjects = () => {
                   whileHover={{ y: -10 }}
                   className="card overflow-hidden group"
                 >
-                  {project.image && (
+                  {(project.coverImage || project.image) && (
                     <div className="relative h-48 overflow-hidden">
-                      <img
-                        src={project.image}
-                        alt={project.title}
-                        className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
-                      />
+                      {project.coverImageType === 'video' ? (
+                        <video
+                          src={project.coverImage}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                          muted
+                          loop
+                          autoPlay
+                        />
+                      ) : (
+                        <img
+                          src={project.coverImage || project.image}
+                          alt={project.title}
+                          className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300"
+                        />
+                      )}
                       <div className="absolute inset-0 bg-gradient-to-t from-black/60 to-transparent" />
                     </div>
                   )}
@@ -93,7 +111,8 @@ const FeaturedProjects = () => {
                     <h3 className="text-xl font-bold mb-2 group-hover:text-primary-600 transition-colors">
                       {project.title}
                     </h3>
-                    <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2">
+                    {/* ✅ Préservation des sauts de ligne */}
+                    <p className="text-gray-600 dark:text-gray-400 mb-4 line-clamp-2 whitespace-pre-wrap">
                       {project.description}
                     </p>
 
@@ -107,6 +126,11 @@ const FeaturedProjects = () => {
                             {tech}
                           </span>
                         ))}
+                        {technologies.length > 3 && (
+                          <span className="px-3 py-1 text-xs rounded-full bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-400">
+                            +{technologies.length - 3}
+                          </span>
+                        )}
                       </div>
                     )}
 

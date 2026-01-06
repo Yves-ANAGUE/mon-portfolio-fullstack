@@ -1,16 +1,20 @@
+// frontend/src/components/skills/SkillFilters.jsx
 import { motion } from 'framer-motion';
 import { useLanguage } from '../../hooks/useLanguage';
-import { CATEGORIES } from '../../utils/constants';
 
 const SkillFilters = ({ selectedCategory, onCategoryChange }) => {
   const { t } = useLanguage();
 
+  // ✅ Ajout de "Soft Skills" et "Autre"
   const categories = [
     { value: 'all', label: t('skills.all') },
-    ...CATEGORIES.SKILLS.map(cat => ({ 
-      value: cat, 
-      label: t(`skills.${cat.replace('-', '')}`) 
-    }))
+    { value: 'frontend', label: t('skills.frontend') },
+    { value: 'backend', label: t('skills.backend') },
+    { value: 'database', label: t('skills.database') },
+    { value: 'devops', label: t('skills.devops') },
+    { value: 'tools', label: t('skills.tools') },
+    { value: 'soft-skills', label: t('skills.softSkills') }, // ✅ AJOUT
+    { value: 'other', label: t('skills.other') } // ✅ AJOUT
   ];
 
   return (

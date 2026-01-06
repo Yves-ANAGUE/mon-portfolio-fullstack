@@ -16,7 +16,14 @@
     "actions": "Actions",
     "noData": "No data available",
     "backHome": "Back to home",
-    "download": "Download"
+    "download": "Download",
+    "reset": "Reset",
+    "sortNewest": "Most recent",
+    "sortOldest": "Oldest first",
+    "sortNameAsc": "A → Z",
+    "sortNameDesc": "Z → A",
+    "sortSizeAsc": "Increasing sizes",
+    "sortSizeDesc": "Decreasing sizes"
   },
   "nav": {
     "home": "Home",
@@ -64,7 +71,10 @@
     "demo": "Demo",
     "code": "Code",
     "usedTechnologies": "Technologies used",
-    "features": "Features"
+    "features": "Features",
+    "sortRecent": "Most recent",
+    "sortOldest": "Oldest first",
+    "sortAlpha": "A → Z"
   },
   "skills": {
     "title": "My Skills",
@@ -78,13 +88,18 @@
     "devops": "DevOps",
     "tools": "Tools",
     "softSkills": "Soft Skills",
+    "other": "Other",
     "level": "Level",
     "noResults": "No skills found"
   },
   "testimonials": {
     "title": "Testimonials",
     "subtitle": "What my clients and collaborators say",
-    "noTestimonials": "No testimonial yet"
+    "noTestimonials": "No testimonial yet",
+    "search": "Search testimonial...",
+    "sortRecent": "Most recent",
+    "sortOldest": "Oldest first",
+    "sortAlpha": "A → Z"
   },
   "media": {
     "title": "Media",
@@ -92,12 +107,24 @@
     "all": "All",
     "images": "Images",
     "videos": "Videos",
-    "noMedia": "No media available"
+    "noMedia": "No media available",
+    "search": "Search media...",
+    "sortOptions": "Sort options",
+    "sortRecent": "Most recent",
+    "sortOldest": "Oldest first",
+    "sortAlpha": "A → Z",
+    "sortByProject": "📁 Sort by project",
+    "sortBySkill": "🛠️ Sort by skill",
+    "reset": "Reset"
   },
   "links": {
     "title": "Useful Links",
     "subtitle": "My profiles and online resources",
-    "noLinks": "No links available"
+    "noLinks": "No links available",
+    "search": "Search link...",
+    "sortRecent": "Most recent",
+    "sortOldest": "Oldest first",
+    "sortAlpha": "A → Z"
   },
   "downloads": {
     "title": "Downloads",
@@ -163,9 +190,20 @@
     "error": "An error occurred",
     "new": "New",
     "upload": "Upload",
-    "uploading": "Uploading..."
+    "uploading": "Uploading...",
+    "coverImage": "Cover Image/Video",
+    "mediaFiles": "Media files (multiple)",
+    "titlesFr": "Professional titles (FR)",
+    "titlesEn": "Professional titles (EN)",
+    "descriptionsFr": "Short descriptions (FR)",
+    "descriptionsEn": "Short descriptions (EN)",
+    "addTitle": "Add title",
+    "addDescription": "Add description",
+    "experiences": "Professional experience",
+    "formations": "Education",
+    "languages": "Languages",
+    "interests": "Interests"
   },
-
   "chatbot": {
     "title": "AI Assistant",
     "subtitle": "Ask me questions about the portfolio",
@@ -184,6 +222,12 @@
       "projects": "Discover projects",
       "contact": "Get contact information",
       "navigate": "Navigate the portfolio"
+    },
+    "quickQuestions": {
+      "skills": "What are the skills?",
+      "projects": "Show me the projects",
+      "contact": "How to contact you?",
+      "cv": "Where to find the resume?"
     }
   }
 }

@@ -16,7 +16,16 @@
     "actions": "Actions",
     "noData": "Aucune donnée disponible",
     "backHome": "Retour à l'accueil",
-    "download": "Télécharger"
+    "download": "Télécharger",
+    "reset": "Réinitialiser",
+    "sortNewest": "Plus récents",
+    "sortOldest": "Plus anciens",
+    "sortNameAsc": "A → Z",
+    "sortNameDesc": "Z → A",
+    "sortSizeAsc": "Tailles croissantes",
+    "sortSizeDesc": "Tailles décroissantes"
+
+
   },
   "nav": {
     "home": "Accueil",
@@ -64,7 +73,10 @@
     "demo": "Démo",
     "code": "Code",
     "usedTechnologies": "Technologies utilisées",
-    "features": "Fonctionnalités"
+    "features": "Fonctionnalités",
+    "sortRecent": "Plus récents",
+    "sortOldest": "Plus anciens",
+    "sortAlpha": "A → Z"
   },
   "skills": {
     "title": "Mes Compétences",
@@ -78,13 +90,18 @@
     "devops": "DevOps",
     "tools": "Outils",
     "softSkills": "Soft Skills",
+    "other": "Autres",
     "level": "Niveau",
     "noResults": "Aucune compétence trouvée"
   },
   "testimonials": {
     "title": "Témoignages",
     "subtitle": "Ce que disent mes clients et collaborateurs",
-    "noTestimonials": "Aucun témoignage pour le moment"
+    "noTestimonials": "Aucun témoignage pour le moment",
+    "search": "Rechercher un témoignage...",
+    "sortRecent": "Plus récents",
+    "sortOldest": "Plus anciens",
+    "sortAlpha": "A → Z"
   },
   "media": {
     "title": "Médias",
@@ -92,12 +109,24 @@
     "all": "Tous",
     "images": "Images",
     "videos": "Vidéos",
-    "noMedia": "Aucun média disponible"
+    "noMedia": "Aucun média disponible",
+    "search": "Rechercher un média...",
+    "sortOptions": "Options de tri",
+    "sortRecent": "Plus récents",
+    "sortOldest": "Plus anciens",
+    "sortAlpha": "A → Z",
+    "sortByProject": "📁 Trier par projet",
+    "sortBySkill": "🛠️ Trier par compétence",
+    "reset": "Réinitialiser"
   },
   "links": {
     "title": "Liens Utiles",
     "subtitle": "Mes profils et ressources en ligne",
-    "noLinks": "Aucun lien disponible"
+    "noLinks": "Aucun lien disponible",
+    "search": "Rechercher un lien...",
+    "sortRecent": "Plus récents",
+    "sortOldest": "Plus anciens",
+    "sortAlpha": "A → Z"
   },
   "downloads": {
     "title": "Téléchargements",
@@ -163,7 +192,19 @@
     "error": "Une erreur s'est produite",
     "new": "Nouveau",
     "upload": "Upload",
-    "uploading": "Upload en cours..."
+    "uploading": "Upload en cours...",
+    "coverImage": "Image/Vidéo de couverture",
+    "mediaFiles": "Fichiers médias (multiples)",
+    "titlesFr": "Titres professionnels (FR)",
+    "titlesEn": "Titres professionnels (EN)",
+    "descriptionsFr": "Descriptions courtes (FR)",
+    "descriptionsEn": "Descriptions courtes (EN)",
+    "addTitle": "Ajouter un titre",
+    "addDescription": "Ajouter une description",
+    "experiences": "Expériences professionnelles",
+    "formations": "Formations",
+    "languages": "Langues",
+    "interests": "Centres d'intérêt"
   },
   "chatbot": {
     "title": "Assistant IA",
@@ -183,6 +224,12 @@
       "projects": "Découvrir les projets",
       "contact": "Obtenir les coordonnées",
       "navigate": "Naviguer dans le portfolio"
+    },
+    "quickQuestions": {
+      "skills": "Quelles sont les compétences ?",
+      "projects": "Montre-moi les projets",
+      "contact": "Comment te contacter ?",
+      "cv": "Où trouver le CV ?"
     }
   }
 }

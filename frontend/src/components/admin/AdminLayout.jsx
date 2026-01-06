@@ -4,6 +4,7 @@ import { AuthProvider } from '../../context/AuthContext';
 import { ThemeProvider } from '../../context/ThemeContext';
 import { LanguageProvider } from '../../context/LanguageContext';
 
+//allons-y!
 const AdminLayout = () => {
   return (
     <ThemeProvider>

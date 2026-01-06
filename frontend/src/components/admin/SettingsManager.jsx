@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Save, Upload, User } from 'lucide-react';
+import { Save, Upload, User, Plus, Trash2 } from 'lucide-react';
 import settingsService from '../../services/settings.service';
 import toast from 'react-hot-toast';
 import LoadingSpinner from '../common/LoadingSpinner';
@@ -22,7 +22,7 @@ const SettingsManager = () => {
       if (response.data?.profile?.photo) {
         setPhotoPreview(response.data.profile.photo);
       }
-    } catch (error) {
+    } catch {
       toast.error('Erreur lors du chargement');
     } finally {
       setLoading(false);
@@ -38,31 +38,44 @@ const SettingsManager = () => {
   };
 
   const updateProfile = (field, value) => {
-    setSettings({
-      ...settings,
-      profile: { ...settings.profile, [field]: value }
-    });
+    setSettings((prev) => ({
+      ...prev,
+      profile: { ...prev.profile, [field]: value }
+    }));
   };
 
   const updateSocials = (field, value) => {
-    setSettings({
-      ...settings,
-      socials: { ...settings.socials, [field]: value }
-    });
+    setSettings((prev) => ({
+      ...prev,
+      socials: { ...prev.socials, [field]: value }
+    }));
   };
 
   const updateFooter = (field, value) => {
-    setSettings({
-      ...settings,
-      footer: { ...settings.footer, [field]: value }
-    });
+    setSettings((prev) => ({
+      ...prev,
+      footer: { ...prev.footer, [field]: value }
+    }));
   };
 
   const updateHomePage = (field, value) => {
-    setSettings({
-      ...settings,
-      homePage: { ...settings.homePage, [field]: value }
-    });
+    setSettings((prev) => ({
+      ...prev,
+      homePage: { ...prev.homePage, [field]: value }
+    }));
+  };
+
+  /* ================= TITRES MULTIPLES ================= */
+  const addItem = (field) => updateProfile(field, [...(settings.profile[field] || []), '']);
+  const updateItem = (field, i, v) => {
+    const arr = [...settings.profile[field]];
+    arr[i] = v;
+    updateProfile(field, arr);
+  };
+  const removeItem = (field, i) => {
+    const arr = [...settings.profile[field]];
+    arr.splice(i, 1);
+    updateProfile(field, arr);
   };
 
   const handleSubmit = async (e) => {
@@ -75,17 +88,14 @@ const SettingsManager = () => {
       formData.append('socials', JSON.stringify(settings.socials));
       formData.append('footer', JSON.stringify(settings.footer));
       formData.append('homePage', JSON.stringify(settings.homePage));
-      
-      if (photoFile) {
-        formData.append('image', photoFile);
-      }
+
+      if (photoFile) formData.append('image', photoFile);
 
       await settingsService.update(formData);
       toast.success('Paramètres enregistrés !');
       fetchSettings();
-    } catch (error) {
-      console.error('Erreur:', error);
-      toast.error('Erreur lors de l\'enregistrement');
+    } catch {
+      toast.error('Erreur lors de l’enregistrement');
     } finally {
       setSaving(false);
     }
@@ -93,48 +103,36 @@ const SettingsManager = () => {
 
   if (loading) return <LoadingSpinner size="lg" />;
 
-  // Initialiser homePage si n'existe pas
-  if (!settings.homePage) {
-    settings.homePage = {
-      cleanCodeTitleFr: 'Clean Code',
-      cleanCodeTitleEn: 'Clean Code',
-      cleanCodeDescFr: 'J\'écris du code propre, maintenable et bien documenté.',
-      cleanCodeDescEn: 'I write clean, maintainable, and well-documented code.',
-      creativeDesignTitleFr: 'Design créatif',
-      creativeDesignTitleEn: 'Creative Design',
-      creativeDesignDescFr: 'Je crée des interfaces modernes et intuitives.',
-      creativeDesignDescEn: 'I create modern and intuitive interfaces.',
-      performanceTitleFr: 'Performance',
-      performanceTitleEn: 'Performance',
-      performanceDescFr: 'J\'optimise chaque aspect pour des performances maximales.',
-      performanceDescEn: 'I optimize every aspect for maximum performance.',
-      collaborationTitleFr: 'Collaboration',
-      collaborationTitleEn: 'Collaboration',
-      collaborationDescFr: 'Je travaille efficacement en équipe et communique clairement.',
-      collaborationDescEn: 'I work effectively in teams and communicate clearly.'
-    };
-  }
+  /* ================= INIT SAFE ================= */
+  settings.profile ||= {};
+  settings.socials ||= {};
+  settings.footer ||= {};
+  settings.homePage ||= {};
+  settings.profile.titles ||= ['Développeur Full Stack'];
+  settings.profile.titlesEn ||= ['Full Stack Developer'];
+  settings.profile.descriptions ||= ['Passionné par la création d’expériences web'];
+  settings.profile.descriptionsEn ||= ['Passionate about creating web experiences'];
+  settings.profile.emails ||= [];
+  settings.profile.phones ||= [];
+  settings.profile.locations ||= [];
+  settings.profile.locationsEn ||= [];
 
   return (
     <div>
       <h2 className="text-3xl font-bold mb-8">⚙️ Paramètres du site</h2>
 
       <form onSubmit={handleSubmit} className="space-y-8">
-        {/* Photo de profil */}
+
+        {/* PHOTO */}
         <div className="card p-6">
           <h3 className="text-xl font-bold mb-4">📸 Photo de profil</h3>
-          <div className="flex items-center gap-6">
-            <div className="w-32 h-32 rounded-full bg-gray-200 dark:bg-gray-700 overflow-hidden flex items-center justify-center">
-              {photoPreview ? (
-                <img src={photoPreview} alt="Profil" className="w-full h-full object-cover" />
-              ) : (
-                <User className="w-16 h-16 text-gray-400" />
-              )}
+          <div className="flex gap-6 items-center">
+            <div className="w-32 h-32 rounded-full overflow-hidden bg-gray-200">
+              {photoPreview ? <img src={photoPreview} className="w-full h-full object-cover" /> : <User className="w-full h-full p-6" />}
             </div>
             <label className="btn btn-secondary cursor-pointer">
-              <Upload className="w-5 h-5 mr-2" />
-              Changer la photo
-              <input type="file" accept="image/*" className="hidden" onChange={handlePhotoChange} />
+              <Upload className="w-4 h-4 mr-2" /> Changer
+              <input hidden type="file" accept="image/*" onChange={handlePhotoChange} />
             </label>
           </div>
         </div>
@@ -414,6 +412,56 @@ Lyon, France`}
               />
             </div>
           </div>
+        </div>
+
+        {/* TITRES MULTIPLES */}
+        <div className="card p-6">
+          <h3 className="text-xl font-bold mb-4">✨ Titres (Typewriter)</h3>
+          {['titles', 'titlesEn'].map((field, idx) => (
+            <div key={field} className="mb-4">
+              <div className="flex justify-between mb-2">
+                <strong>{idx === 0 ? '🇫🇷 FR' : '🇬🇧 EN'}</strong>
+                <button type="button" className="btn btn-sm" onClick={() => addItem(field)}>
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              {settings.profile[field].map((v, i) => (
+                <div key={i} className="flex gap-2 mb-2">
+                  <input className="input flex-1" value={v} onChange={(e) => updateItem(field, i, e.target.value)} />
+                  {settings.profile[field].length > 1 && (
+                    <button type="button" onClick={() => removeItem(field, i)}>
+                      <Trash2 className="text-red-500" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+
+        {/* DESCRIPTIONS MULTIPLES */}
+        <div className="card p-6">
+          <h3 className="text-xl font-bold mb-4">📝 Descriptions (Typewriter)</h3>
+          {['descriptions', 'descriptionsEn'].map((field, idx) => (
+            <div key={field} className="mb-4">
+              <div className="flex justify-between mb-2">
+                <strong>{idx === 0 ? '🇫🇷 FR' : '🇬🇧 EN'}</strong>
+                <button type="button" className="btn btn-sm" onClick={() => addItem(field)}>
+                  <Plus className="w-4 h-4" />
+                </button>
+              </div>
+              {settings.profile[field].map((v, i) => (
+                <div key={i} className="flex gap-2 mb-2">
+                  <textarea className="textarea flex-1" value={v} onChange={(e) => updateItem(field, i, e.target.value)} />
+                  {settings.profile[field].length > 1 && (
+                    <button type="button" onClick={() => removeItem(field, i)}>
+                      <Trash2 className="text-red-500" />
+                    </button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ))}
         </div>
 
         {/* Cartes compétences page d'accueil */}

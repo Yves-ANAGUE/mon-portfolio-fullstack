@@ -217,7 +217,7 @@ const About = () => {
                 {isFrench ? 'Expériences Professionnelles' : 'Professional Experience'}
               </h3>
               <div className="max-w-4xl mx-auto space-y-4">
-                {experiences.slice(0, 3).map((exp, index) => (
+                {experiences.map((exp, index) => (
                   <div key={index} className="card p-4 border-l-4 border-primary-600">
                     <h4 className="font-bold">
                       {isFrench ? exp.position : exp.positionEn || exp.position}
@@ -244,7 +244,7 @@ const About = () => {
                 {isFrench ? 'Formation' : 'Education'}
               </h3>
               <div className="max-w-4xl mx-auto space-y-4">
-                {formations.slice(0, 3).map((formation, index) => (
+                {formations.map((formation, index) => (
                   <div key={index} className="card p-4 border-l-4 border-purple-600">
                     <h4 className="font-bold">
                       {isFrench ? formation.diploma : formation.diplomaEn || formation.diploma}

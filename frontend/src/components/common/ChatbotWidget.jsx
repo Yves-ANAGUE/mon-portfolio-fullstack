@@ -89,6 +89,21 @@ const ChatbotWidget = () => {
     }
   };
 
+  // ✅ Questions rapides avec TEXTE COMPLET
+  const quickQuestions = language === 'fr' 
+    ? [
+        { emoji: '🛠️', text: 'Quelles sont tes compétences ?' },
+        { emoji: '🚀', text: 'Montre-moi les projets récents' },
+        { emoji: '💼', text: 'Où as-tu travaillé ?' },
+        { emoji: '📧', text: 'Comment te contacter ?' }
+      ]
+    : [
+        { emoji: '🛠️', text: 'What are your skills?' },
+        { emoji: '🚀', text: 'Show me recent projects' },
+        { emoji: '💼', text: 'Where have you worked?' },
+        { emoji: '📧', text: 'How to contact you?' }
+      ];
+
   return (
     <>
       <AnimatePresence>
@@ -185,6 +200,21 @@ const ChatbotWidget = () => {
                 </div>
 
                 <div className="p-4 border-t border-gray-200 dark:border-gray-700">
+                  {/* ✅ Questions rapides avec TEXTE COMPLET */}
+                  <div className="mb-3 flex flex-wrap gap-2">
+                    {quickQuestions.map((q, index) => (
+                      <button
+                        key={index}
+                        onClick={() => setInput(q.text)}
+                        disabled={loading}
+                        className="px-3 py-2 text-xs rounded-lg bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-primary-100 dark:hover:bg-primary-900/30 hover:text-primary-600 transition-colors disabled:opacity-50 flex items-center gap-2"
+                      >
+                        <span>{q.emoji}</span>
+                        <span className="truncate">{q.text}</span>
+                      </button>
+                    ))}
+                  </div>
+
                   <div className="flex gap-2">
                     <input
                       type="text"

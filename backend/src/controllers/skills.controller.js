@@ -63,14 +63,46 @@ export const createSkill = async (req, res) => {
   try {
     const skillData = { ...req.body };
     
-    // Upload icône si présente
-    if (req.files && req.files.image) {
-      const result = await uploadToCloudinary(req.files.image[0], 'portfolio/skills');
-      skillData.icon = result.secure_url;
-      skillData.iconPublicId = result.public_id;
+    // ✅ Upload image/vidéo de couverture
+    if (req.files && req.files.coverImage) {
+      const result = await uploadToCloudinary(req.files.coverImage[0], 'portfolio/skills/covers');
+      skillData.coverImage = result.secure_url;
+      skillData.coverImagePublicId = result.public_id;
+      skillData.coverImageType = req.files.coverImage[0].mimetype.startsWith('video') ? 'video' : 'image';
     }
 
-    // Convertir level en nombre
+    // ✅ Upload fichiers médias multiples
+    if (req.files && req.files.mediaFiles) {
+      const mediaUploads = await Promise.all(
+        req.files.mediaFiles.map(file => uploadToCloudinary(file, 'portfolio/skills/media'))
+      );
+      
+      const mediaObj = {};
+      mediaUploads.forEach((result, index) => {
+        const file = req.files.mediaFiles[index];
+        mediaObj[`media_${index}`] = {
+          url: result.secure_url,
+          publicId: result.public_id,
+          type: file.mimetype.startsWith('video') ? 'video' : file.mimetype.startsWith('image') ? 'image' : 'file',
+          mimeType: file.mimetype,
+          originalName: file.originalname
+        };
+      });
+      skillData.mediaFiles = mediaObj;
+
+      // ✅ Créer entrées dans Médias
+      const mediaRef = db.ref('media');
+      for (const [key, media] of Object.entries(mediaObj)) {
+        await mediaRef.push({
+          ...media,
+          skillId: null,
+          skillName: skillData.name,
+          category: 'skill',
+          createdAt: new Date().toISOString()
+        });
+      }
+    }
+
     if (skillData.level) {
       skillData.level = Number(skillData.level);
     }
@@ -81,6 +113,17 @@ export const createSkill = async (req, res) => {
     const skillsRef = db.ref('skills');
     const newSkillRef = skillsRef.push();
     await newSkillRef.set(skillData);
+
+    // Mettre à jour skillId dans médias
+    if (skillData.mediaFiles) {
+      const mediaRef = db.ref('media');
+      const mediaSnapshot = await mediaRef.orderByChild('skillName').equalTo(skillData.name).once('value');
+      const updates = {};
+      mediaSnapshot.forEach(child => {
+        updates[child.key] = { ...child.val(), skillId: newSkillRef.key };
+      });
+      await Promise.all(Object.entries(updates).map(([key, val]) => mediaRef.child(key).set(val)));
+    }
 
     res.status(201).json({
       success: true,
@@ -115,16 +158,52 @@ export const updateSkill = async (req, res) => {
       });
     }
 
-    // Upload nouvelle icône si présente
-    if (req.files && req.files.image) {
-      // Supprimer l'ancienne icône
-      if (existingSkill.iconPublicId) {
-        await deleteFromCloudinary(existingSkill.iconPublicId);
+    // Upload nouvelle image de couverture
+    if (req.files && req.files.coverImage) {
+      if (existingSkill.coverImagePublicId) {
+        await deleteFromCloudinary(existingSkill.coverImagePublicId);
       }
       
-      const result = await uploadToCloudinary(req.files.image[0], 'portfolio/skills');
-      skillData.icon = result.secure_url;
-      skillData.iconPublicId = result.public_id;
+      const result = await uploadToCloudinary(req.files.coverImage[0], 'portfolio/skills/covers');
+      skillData.coverImage = result.secure_url;
+      skillData.coverImagePublicId = result.public_id;
+      skillData.coverImageType = req.files.coverImage[0].mimetype.startsWith('video') ? 'video' : 'image';
+    }
+
+    // Upload nouveaux médias
+    if (req.files && req.files.mediaFiles) {
+      const mediaUploads = await Promise.all(
+        req.files.mediaFiles.map(file => uploadToCloudinary(file, 'portfolio/skills/media'))
+      );
+      
+      const mediaObj = { ...(existingSkill.mediaFiles || {}) };
+      const newMediaKeys = Object.keys(mediaObj).length;
+      
+      mediaUploads.forEach((result, index) => {
+        const file = req.files.mediaFiles[index];
+        mediaObj[`media_${newMediaKeys + index}`] = {
+          url: result.secure_url,
+          publicId: result.public_id,
+          type: file.mimetype.startsWith('video') ? 'video' : file.mimetype.startsWith('image') ? 'image' : 'file',
+          mimeType: file.mimetype,
+          originalName: file.originalname
+        };
+      });
+      skillData.mediaFiles = mediaObj;
+
+      // Créer entrées médias
+      const mediaRef = db.ref('media');
+      for (const [key, media] of Object.entries(mediaObj)) {
+        if (key.startsWith(`media_${newMediaKeys}`)) {
+          await mediaRef.push({
+            ...media,
+            skillId: id,
+            skillName: skillData.name || existingSkill.name,
+            category: 'skill',
+            createdAt: new Date().toISOString()
+          });
+        }
+      }
     }
 
     skillData.updatedAt = new Date().toISOString();
@@ -168,10 +247,28 @@ export const deleteSkill = async (req, res) => {
       });
     }
 
-    // Supprimer l'icône de Cloudinary
-    if (skill.iconPublicId) {
-      await deleteFromCloudinary(skill.iconPublicId);
+    // Supprimer image de couverture
+    if (skill.coverImagePublicId) {
+      await deleteFromCloudinary(skill.coverImagePublicId);
     }
+
+    // Supprimer fichiers médias
+    if (skill.mediaFiles) {
+      await Promise.all(
+        Object.values(skill.mediaFiles).map(media => 
+          deleteFromCloudinary(media.publicId)
+        )
+      );
+    }
+
+    // Supprimer entrées médias associées
+    const mediaRef = db.ref('media');
+    const mediaSnapshot = await mediaRef.orderByChild('skillId').equalTo(id).once('value');
+    const mediaDeletes = [];
+    mediaSnapshot.forEach(child => {
+      mediaDeletes.push(mediaRef.child(child.key).remove());
+    });
+    await Promise.all(mediaDeletes);
 
     await skillRef.remove();
 
