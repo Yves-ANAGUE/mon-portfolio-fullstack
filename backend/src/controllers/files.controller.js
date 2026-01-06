@@ -246,12 +246,19 @@ export const downloadFile = async (req, res) => {
     }
 
     const buffer = Buffer.from(file.data, 'base64');
-    const safeFilename = sanitizeFilename(file.originalName || 'download');
 
-    res.setHeader('Content-Type', file.mimeType || 'application/octet-stream');
+    // 🔐 Encodage RFC 5987 (OBLIGATOIRE POUR VERCEL)
+    const encodedFilename = encodeURIComponent(
+      file.originalName || 'download'
+    );
+
     res.setHeader(
       'Content-Disposition',
-      `attachment; filename="${safeFilename}"`
+      `attachment; filename*=UTF-8''${encodedFilename}`
+    );
+    res.setHeader(
+      'Content-Type',
+      file.mimeType || 'application/octet-stream'
     );
     res.setHeader('Content-Length', buffer.length);
 
@@ -264,3 +271,4 @@ export const downloadFile = async (req, res) => {
     });
   }
 };
+
