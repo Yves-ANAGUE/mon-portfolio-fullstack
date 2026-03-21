@@ -12,7 +12,7 @@ import toast from 'react-hot-toast';
 import { ANIMATION_VARIANTS, STAGGER_CONTAINER } from '../utils/constants';
 
 const Media = () => {
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
   const [media, setMedia] = useState([]);
   const [filteredMedia, setFilteredMedia] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -34,7 +34,7 @@ const Media = () => {
 
   useEffect(() => {
     filterMedia();
-  }, [filter, searchTerm, sortBy, selectedProjectId, selectedSkillId, media]);
+  }, [filter, searchTerm, sortBy, selectedProjectId, selectedSkillId, media, language]);
 
   const fetchData = async () => {
     try {
@@ -64,14 +64,52 @@ const Media = () => {
       filtered = filtered.filter(m => m.type === filter);
     }
 
-    // ✅ Filter by project
+    // ✅ Filter by project - TRI FRONTEND (nom COMPLET, insensible à la casse)
     if (selectedProjectId) {
-      filtered = filtered.filter(m => m.projectId === selectedProjectId);
+      const selectedProject = projects.find(p => p.id === selectedProjectId);
+      if (selectedProject) {
+        const projectTitle = language === 'fr' ? selectedProject.title : selectedProject.titleEn || selectedProject.title;
+        const projectTitleLower = (projectTitle || '').toLowerCase().trim();
+        
+        filtered = filtered.filter(m => {
+          const mediaTitle = (m.title || '').toLowerCase().trim();
+          const mediaOriginalName = (m.originalName || '').toLowerCase().trim();
+          const mediaProjectTitle = (m.projectTitle || '').toLowerCase().trim();
+          
+          // ✅ Vérifier si le nom COMPLET du projet contient le nom COMPLET du média OU vice-versa (insensible à la casse)
+          return (projectTitleLower && mediaTitle && (projectTitleLower.includes(mediaTitle) || mediaTitle.includes(projectTitleLower))) || 
+                 (projectTitleLower && mediaOriginalName && (projectTitleLower.includes(mediaOriginalName) || mediaOriginalName.includes(projectTitleLower))) ||
+                 (projectTitleLower && mediaProjectTitle && (projectTitleLower.includes(mediaProjectTitle) || mediaProjectTitle.includes(projectTitleLower))) ||
+                 (projectTitleLower === mediaTitle) ||
+                 (projectTitleLower === mediaOriginalName) ||
+                 (projectTitleLower === mediaProjectTitle) ||
+                 m.projectId === selectedProjectId;
+        });
+      }
     }
 
-    // ✅ Filter by skill
+    // ✅ Filter by skill - TRI FRONTEND (nom COMPLET, insensible à la casse)
     if (selectedSkillId) {
-      filtered = filtered.filter(m => m.skillId === selectedSkillId);
+      const selectedSkill = skills.find(s => s.id === selectedSkillId);
+      if (selectedSkill) {
+        const skillName = language === 'fr' ? selectedSkill.name : selectedSkill.nameEn || selectedSkill.name;
+        const skillNameLower = (skillName || '').toLowerCase().trim();
+        
+        filtered = filtered.filter(m => {
+          const mediaTitle = (m.title || '').toLowerCase().trim();
+          const mediaOriginalName = (m.originalName || '').toLowerCase().trim();
+          const mediaSkillName = (m.skillName || '').toLowerCase().trim();
+          
+          // ✅ Vérifier si le nom COMPLET de la compétence contient le nom COMPLET du média OU vice-versa (insensible à la casse)
+          return (skillNameLower && mediaTitle && (skillNameLower.includes(mediaTitle) || mediaTitle.includes(skillNameLower))) || 
+                 (skillNameLower && mediaOriginalName && (skillNameLower.includes(mediaOriginalName) || mediaOriginalName.includes(skillNameLower))) ||
+                 (skillNameLower && mediaSkillName && (skillNameLower.includes(mediaSkillName) || mediaSkillName.includes(skillNameLower))) ||
+                 (skillNameLower === mediaTitle) ||
+                 (skillNameLower === mediaOriginalName) ||
+                 (skillNameLower === mediaSkillName) ||
+                 m.skillId === selectedSkillId;
+        });
+      }
     }
 
     // Search
@@ -80,7 +118,8 @@ const Media = () => {
         m.title?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         m.description?.toLowerCase().includes(searchTerm.toLowerCase()) ||
         m.projectTitle?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        m.skillName?.toLowerCase().includes(searchTerm.toLowerCase())
+        m.skillName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        m.originalName?.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -232,7 +271,9 @@ const Media = () => {
             >
               <span className="font-medium">
                 {selectedProjectId 
-                  ? `📁 ${projects.find(p => p.id === selectedProjectId)?.title}`
+                  ? `📁 ${language === 'fr' 
+                      ? projects.find(p => p.id === selectedProjectId)?.title 
+                      : projects.find(p => p.id === selectedProjectId)?.titleEn || projects.find(p => p.id === selectedProjectId)?.title}`
                   : t('media.sortByProject')}
               </span>
               <span className="text-xl">{showProjectList ? '▲' : '▼'}</span>
@@ -240,15 +281,18 @@ const Media = () => {
             
             {showProjectList && (
               <div className="mt-2 max-h-60 overflow-y-auto border-2 border-gray-200 dark:border-gray-700 rounded-lg">
-                {projects.map(project => (
-                  <button
-                    key={project.id}
-                    onClick={() => handleProjectSelect(project.id)}
-                    className="w-full p-3 text-left hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors border-b border-gray-100 dark:border-gray-800 last:border-0"
-                  >
-                    {project.title}
-                  </button>
-                ))}
+                {projects.map(project => {
+                  const projectTitle = language === 'fr' ? project.title : project.titleEn || project.title;
+                  return (
+                    <button
+                      key={project.id}
+                      onClick={() => handleProjectSelect(project.id)}
+                      className="w-full p-3 text-left hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors border-b border-gray-100 dark:border-gray-800 last:border-0"
+                    >
+                      {projectTitle}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -261,7 +305,9 @@ const Media = () => {
             >
               <span className="font-medium">
                 {selectedSkillId 
-                  ? `🛠️ ${skills.find(s => s.id === selectedSkillId)?.name}`
+                  ? `🛠️ ${language === 'fr' 
+                      ? skills.find(s => s.id === selectedSkillId)?.name 
+                      : skills.find(s => s.id === selectedSkillId)?.nameEn || skills.find(s => s.id === selectedSkillId)?.name}`
                   : t('media.sortBySkill')}
               </span>
               <span className="text-xl">{showSkillList ? '▲' : '▼'}</span>
@@ -269,15 +315,18 @@ const Media = () => {
             
             {showSkillList && (
               <div className="mt-2 max-h-60 overflow-y-auto border-2 border-gray-200 dark:border-gray-700 rounded-lg">
-                {skills.map(skill => (
-                  <button
-                    key={skill.id}
-                    onClick={() => handleSkillSelect(skill.id)}
-                    className="w-full p-3 text-left hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors border-b border-gray-100 dark:border-gray-800 last:border-0"
-                  >
-                    {skill.name}
-                  </button>
-                ))}
+                {skills.map(skill => {
+                  const skillName = language === 'fr' ? skill.name : skill.nameEn || skill.name;
+                  return (
+                    <button
+                      key={skill.id}
+                      onClick={() => handleSkillSelect(skill.id)}
+                      className="w-full p-3 text-left hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors border-b border-gray-100 dark:border-gray-800 last:border-0"
+                    >
+                      {skillName}
+                    </button>
+                  );
+                })}
               </div>
             )}
           </div>
@@ -287,7 +336,9 @@ const Media = () => {
         {filteredMedia.length === 0 ? (
           <div className="text-center py-16">
             <p className="text-xl text-gray-600 dark:text-gray-400">
-              {t('media.noMedia')}
+              {searchTerm || selectedProjectId || selectedSkillId 
+                ? (language === 'fr' ? 'Aucun média trouvé avec ces critères' : 'No media found with these criteria')
+                : t('media.noMedia')}
             </p>
           </div>
         ) : (
