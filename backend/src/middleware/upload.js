@@ -1,38 +1,32 @@
 import multer from 'multer';
-import path from 'path';
 
-// On utilise le stockage en mémoire (Cloudinary ou autre service fera l'upload réel)
 const storage = multer.memoryStorage();
 
 const fileFilter = (req, file, cb) => {
-  const extname = path.extname(file.originalname).toLowerCase();
-  const mimetype = file.mimetype;
-
-  const maxSize = 50 * 1024 * 1024; // 50MB
-
-  // 🚫 Extensions dangereuses à bloquer pour la sécurité
-  const dangerousExtensions = /\.(exe|bat|cmd|sh|dll|msi|scr|vbs|js|jar)$/i;
+  // Bloquer les extensions dangereuses uniquement
+  const dangerousExtensions = /\.(exe|bat|cmd|sh|dll|msi|scr|vbs|jar)$/i;
   if (dangerousExtensions.test(file.originalname)) {
     return cb(new Error('Type de fichier non autorisé pour des raisons de sécurité.'));
   }
-
-  // ✅ Accepter tous les autres types de fichiers (pas de filtrage strict)
+  // Accepter tout le reste
   cb(null, true);
 };
 
-// Configuration de multer
+// ✅ 500MB pour supporter les vidéos lourdes
 export const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
   limits: {
-    fileSize: 50 * 1024 * 1024 // 50MB max
+    fileSize: 500 * 1024 * 1024,  // 500MB
+    files: 50                      // max 50 fichiers par requête
   }
 });
 
-// Champs possibles (image, vidéo, document, etc.)
 export const uploadFields = upload.fields([
-  { name: 'image', maxCount: 1 },
-  { name: 'images', maxCount: 10 },
-  { name: 'video', maxCount: 1 },
-  { name: 'file', maxCount: 1 }
+  { name: 'image',      maxCount: 1  },
+  { name: 'images',     maxCount: 50 },
+  { name: 'video',      maxCount: 1  },
+  { name: 'file',       maxCount: 1  },
+  { name: 'coverImage', maxCount: 1  },
+  { name: 'mediaFiles', maxCount: 50 }
 ]);

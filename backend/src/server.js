@@ -5,7 +5,6 @@ import dotenv from 'dotenv';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
 
-// Import routes
 import authRoutes from './routes/auth.routes.js';
 import projectsRoutes from './routes/projects.routes.js';
 import skillsRoutes from './routes/skills.routes.js';
@@ -21,7 +20,6 @@ import formationsRoutes from './routes/formations.routes.js';
 import languagesRoutes from './routes/languages.routes.js';
 import interestsRoutes from './routes/interests.routes.js';
 
-// Import middleware
 import { errorHandler, notFound } from './middleware/errorHandler.js';
 import { verifyEmailConnection } from './services/email.service.js';
 
@@ -29,84 +27,55 @@ dotenv.config();
 
 const app = express();
 const PORT = process.env.PORT || 5000;
+const isDev = process.env.NODE_ENV !== 'production';
 
-
-
-// Security middleware
-app.use(helmet({
-  crossOriginResourcePolicy: false,
-}));
-/**
- * ✅ OBLIGATOIRE POUR VERCEL
- */
+app.use(helmet({ crossOriginResourcePolicy: false }));
 app.set('trust proxy', 1);
-// Rate limiting
+
+// ✅ Rate limiter : très permissif en dev, strict en production
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
-  max: 100,
+  max: isDev ? 10000 : 200, // 10000 en dev, 200 en prod
+  standardHeaders: true,
+  legacyHeaders: false,
+  skip: () => isDev, // ✅ En développement, désactiver complètement le rate limit
   message: 'Trop de requêtes depuis cette IP, veuillez réessayer plus tard.'
 });
-
 app.use('/api/', limiter);
 
-// ✅ CORS CORRIGÉ - Accepter toutes les origines Vercel
 const corsOptions = {
-  origin: function (origin, callback) {
-    // Autoriser les requêtes sans origin (mobile apps, curl, etc.)
+  origin: (origin, callback) => {
     if (!origin) return callback(null, true);
-    
-    const allowedOrigins = [
-      process.env.FRONTEND_URL,
-      'http://localhost:5173',
-      'http://localhost:5000'
-    ];
-    
-    // ✅ Autoriser tous les domaines Vercel
-    if (origin.includes('vercel.app')) {
-      return callback(null, true);
-    }
-    
-    if (allowedOrigins.indexOf(origin) !== -1 || !origin) {
-      callback(null, true);
-    } else {
-      callback(null, true); // ✅ En production, accepter quand même
-    }
+    if (origin.includes('vercel.app') || origin.includes('localhost')) return callback(null, true);
+    const allowed = [process.env.FRONTEND_URL];
+    callback(null, allowed.includes(origin) || true);
   },
   credentials: true,
   optionsSuccessStatus: 200,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization']
 };
-
 app.use(cors(corsOptions));
 
-// Body parsing middleware
 app.use(express.json({ limit: '50mb' }));
 app.use(express.urlencoded({ extended: true, limit: '50mb' }));
 
-// ✅ ROUTE RACINE - IMPORTANT POUR VERCEL
+// Log des requêtes (dev uniquement)
+if (isDev) {
+  app.use((req, res, next) => {
+    console.log(`${req.method} ${req.path} | body keys: ${Object.keys(req.body || {}).join(',') || 'none'}`);
+    next();
+  });
+}
+
 app.get('/', (req, res) => {
-  res.json({
-    message: '🚀 Portfolio Backend API',
-    status: 'running',
-    version: '1.0.0',
-    endpoints: {
-      health: '/health',
-      api: '/api/*'
-    }
-  });
+  res.json({ message: '🚀 Portfolio Backend API', status: 'running', version: '1.0.0' });
 });
 
-// Health check route
 app.get('/health', (req, res) => {
-  res.json({
-    status: 'OK',
-    timestamp: new Date().toISOString(),
-    uptime: process.uptime()
-  });
+  res.json({ status: 'OK', timestamp: new Date().toISOString(), uptime: process.uptime() });
 });
 
-// ✅ API Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/projects', projectsRoutes);
 app.use('/api/skills', skillsRoutes);
@@ -122,32 +91,27 @@ app.use('/api/formations', formationsRoutes);
 app.use('/api/languages', languagesRoutes);
 app.use('/api/interests', interestsRoutes);
 
-// Error handling
 app.use(notFound);
 app.use(errorHandler);
 
-// Start server
 const startServer = async () => {
   try {
     await verifyEmailConnection();
-    
     app.listen(PORT, () => {
       console.log('='.repeat(50));
       console.log(`🚀 Serveur démarré sur le port ${PORT}`);
       console.log(`📍 URL: http://localhost:${PORT}`);
       console.log(`🌍 Environnement: ${process.env.NODE_ENV || 'development'}`);
       console.log(`📧 Email configuré: ${process.env.EMAIL_USER}`);
+      console.log(`🔓 Rate limit: ${isDev ? 'DÉSACTIVÉ (dev)' : '200 req/15min (prod)'}`);
+      console.log(`📡 Routes media: GET/ GET/:id POST/register POST/ PUT/:id DELETE/bulk DELETE/:id`);
       console.log('='.repeat(50));
     });
   } catch (error) {
-    console.error('❌ Erreur lors du démarrage du serveur:', error);
-    // ✅ Ne pas exit en production pour Vercel
-    if (process.env.NODE_ENV !== 'production') {
-      process.exit(1);
-    }
+    console.error('❌ Erreur démarrage:', error);
+    if (!isDev) process.exit(1);
   }
 };
 
 startServer();
-
 export default app;
